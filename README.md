@@ -37,9 +37,39 @@ The PKG contains **only** the engine and client binaries, a few configuration fi
 
 ---
 
-## 🚀 Installation, Step by Step
+## 🚀 Installation
 
-You need: a PS4 with **GoldHEN**, a Windows PC, and a Steam account that owns **Counter-Strike: Source** and **Half-Life 2**.
+You need: a PS4 with **GoldHEN**, a Windows PC or a Mac, and a Steam account that owns **Counter-Strike: Source** and **Half-Life 2**.
+
+### The easy way: the installer (recommended)
+
+1. From the **Releases** section of this repository download `SourceEngCSS.pkg` and the installer for your computer:
+   `CSS-PS4-Installer-Windows.exe` or `CSS-PS4-Installer-Mac.zip`.
+2. Install the PKG on the PS4 with GoldHEN: **Settings → Debug Settings → Game → Package Installer**.
+3. On the PS4, turn on the GoldHEN **FTP server** (GoldHEN menu → Server Settings → FTP).
+4. Run the installer on your computer and answer its questions. It:
+   * finds your PS4 on the network by itself;
+   * downloads the right versions of your games with **SteamCMD**, Valve's official command-line Steam client.
+     You type your Steam password and Steam Guard code into SteamCMD itself: the installer never sees or keeps them;
+   * checks the files and uploads them to the PS4. If something breaks off, run it again: it continues where it
+     stopped.
+5. Start **Counter-Strike: Source** on the PS4.
+
+The download is about 10 GB, and the upload over Wi-Fi takes a while. The next time the installer remembers your
+answers (never your password).
+
+> **Windows:** SmartScreen may say *"Windows protected your PC"*, because the installer is not signed. Click
+> **More info → Run anyway**.
+>
+> **Mac (Apple Silicon):** unzip, then right-click the file → **Open** → **Open**. If macOS still blocks it:
+> System Settings → Privacy & Security → **Open Anyway**. SteamCMD needs Rosetta; the installer tells you if it is
+> missing. On an Intel Mac, or if you prefer, run `installer/install_mac.command` from this repository (needs Python 3).
+
+If the PS4 shows its help screen (*"No games found"* or *"… not found"*), scan its QR code with your phone: it opens this page.
+
+### The manual way
+
+You can do the same by hand.
 
 In the end the console must have exactly this:
 

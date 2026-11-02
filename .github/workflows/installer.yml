@@ -1,0 +1,50 @@
+# Builds the installer (installer/sourceeng_install.py) as one file that needs no Python, and attaches it to the
+# release when a release is published. Run it by hand (Actions > Installer > Run workflow) to get the files as an
+# artifact without a release.
+name: Installer
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  NAME: CSS-PS4-Installer
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            file: Windows.exe
+          - os: macos-14
+            file: Mac.zip
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pyinstaller==6.11.1
+      - run: pyinstaller --onefile --console --name "$NAME" installer/sourceeng_install.py
+      - name: Package
+        run: |
+          mkdir out
+          if [ "$RUNNER_OS" = Windows ]; then
+            cp "dist/$NAME.exe" "out/$NAME-${{ matrix.file }}"
+          else
+            # zip keeps the executable bit, which a plain download loses
+            (cd dist && zip -q "../out/$NAME-${{ matrix.file }}" "$NAME")
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.NAME }}-${{ matrix.os }}
+          path: out/*
+      - name: Attach to the release
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" out/* --clobber
