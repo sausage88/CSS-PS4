@@ -1,11 +1,16 @@
 # Builds the installer (installer/sourceeng_install.py) as one file that needs no Python, and attaches it to the
-# release when a release is published. Run it by hand (Actions > Installer > Run workflow) to get the files as an
-# artifact without a release.
+# release when a release is published. By hand: Actions > Installer > Run workflow, with the tag of an existing
+# release (e.g. v14.13) to attach the files to it, or empty to get them only as an artifact.
 name: Installer
 on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to attach the installers to (empty = artifact only)
+        required: false
+        default: ''
 permissions:
   contents: write
 env:
@@ -44,7 +49,8 @@ jobs:
           name: ${{ env.NAME }}-${{ matrix.os }}
           path: out/*
       - name: Attach to the release
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || inputs.tag != ''
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" out/* --clobber
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release upload "$TAG" out/* --clobber --repo "$GITHUB_REPOSITORY"
