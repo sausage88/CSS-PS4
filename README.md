@@ -117,6 +117,11 @@ The PS4 runs the Linux build of the game, and only the Linux `hl2` folder has th
 
    This is several gigabytes. Wait until FileZilla reports that every transfer finished.
 
+**Prefer USB?** FTP is not required: the game only needs the folders in `/data/sourceeng/`, however they get there.
+Copy them to a USB stick (FAT32 or exFAT), plug it into the PS4 and use a homebrew file manager (for example
+Itemzflow) to copy them from `/mnt/usb0/` into `/data/sourceeng/`, keeping the same folder names. The games cannot
+run straight from the USB stick. The installer from *The easy way* always uploads over FTP.
+
 ### Step 5. Play
 1. Start **Counter-Strike: Source** from the PS4 home screen.
 2. On the first start the game installs its own `gameinfo.txt`, `steam.inf` and font list into your folders (Steam's originals are kept next to them as `*_steam.*`). You do not need to do anything.
