@@ -11,7 +11,7 @@ Runs on the player's PC or Mac, Python 3.8+, standard library only:
   python3 sourceeng_install.py                       asks for everything
   python3 sourceeng_install.py --edition css --ps4 192.168.1.50 --steam-user NAME
 """
-import argparse, ftplib, ipaddress, json, os, platform, re, socket, struct, subprocess, sys, tarfile, time
+import argparse, ftplib, ipaddress, json, os, platform, re, socket, ssl, struct, subprocess, sys, tarfile, time
 import urllib.request, zipfile
 from concurrent.futures import ThreadPoolExecutor
 
@@ -57,6 +57,39 @@ def yes(prompt, default=True):
 
 # ---------------------------------------------------------------- SteamCMD
 
+def https_context():
+    """Trust store for HTTPS.
+
+    python.org's Mac Python and a frozen build (PyInstaller) ship no CA bundle, so OpenSSL
+    rejects Valve's certificate ("unable to get local issuer certificate"). The OS keeps the
+    roots. An SSL_CERT_FILE that points at a missing file (a frozen app often sets one) is ignored.
+    """
+    paths = []
+    env = os.environ.get('SSL_CERT_FILE')
+    if env and os.path.isfile(env):
+        paths.append(env)
+    if sys.platform == 'darwin':
+        paths.append('/etc/ssl/cert.pem')
+    elif sys.platform != 'win32':
+        paths += ['/etc/ssl/certs/ca-certificates.crt', '/etc/pki/tls/certs/ca-bundle.crt',
+                  '/etc/ssl/cert.pem']
+    for path in paths:
+        try:
+            return ssl.create_default_context(cafile=path)
+        except (ssl.SSLError, OSError):
+            continue
+    return ssl.create_default_context()
+
+
+def download(url, dest):
+    with urllib.request.urlopen(url, context=https_context(), timeout=60) as r, open(dest, 'wb') as out:
+        while True:
+            chunk = r.read(1 << 20)
+            if not chunk:
+                break
+            out.write(chunk)
+
+
 def need_rosetta():
     """SteamCMD for Mac is an Intel program: on Apple Silicon it runs through Rosetta."""
     if platform.system() != 'Darwin' or platform.machine() != 'arm64':
@@ -83,7 +116,12 @@ def steamcmd_path(work):
     os.makedirs(d, exist_ok=True)
     say('Downloading SteamCMD from Valve: %s' % url)
     arc = os.path.join(d, os.path.basename(url))
-    urllib.request.urlretrieve(url, arc)
+    try:
+        download(url, arc)
+    except OSError as e:
+        if os.path.exists(arc):
+            os.remove(arc)
+        sys.exit('Could not download SteamCMD from Valve: %s' % e)
     if arc.endswith('.zip'):
         with zipfile.ZipFile(arc) as z:
             z.extractall(d)
